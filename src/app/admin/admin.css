@@ -1,0 +1,193 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #14100f;
+  --color-ink-soft: #4a443f;
+  --color-sand: #f5f1ea;
+  --color-sand-deep: #eae3d7;
+  --color-gold: #a2855f;
+  --color-line: #ddd4c6;
+  --color-danger: #a93418;
+
+  --font-display: var(--font-cormorant), "Times New Roman", serif;
+  --font-body: var(--font-manrope), system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-sand);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background: var(--color-ink);
+    color: var(--color-sand);
+  }
+}
+
+.admin-shell {
+  display: grid;
+  grid-template-columns: auto;
+  align-items: start;
+  align-content: start;
+  min-height: 100svh;
+}
+
+.admin-side {
+  background: var(--color-ink);
+  color: var(--color-sand);
+  padding: 1.5rem;
+}
+
+.admin-main {
+  padding: 1.5rem;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid var(--color-line);
+  padding: 1.5rem;
+}
+
+.admin-label {
+  display: block;
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-soft);
+  margin-bottom: 0.4rem;
+}
+
+.admin-input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 0.4rem;
+  border: 1px solid var(--color-line);
+  background: #fff;
+  padding: 0.65rem 0.75rem;
+  font-size: 0.875rem;
+  color: var(--color-ink);
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.admin-input:focus {
+  border-color: var(--color-gold);
+}
+
+textarea.admin-input {
+  min-height: 6rem;
+  resize: vertical;
+  line-height: 1.7;
+}
+
+.admin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.6rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  background: var(--color-ink);
+  color: var(--color-sand);
+  border: 1px solid var(--color-ink);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.admin-btn:hover:not(:disabled) {
+  background: var(--color-gold);
+  border-color: var(--color-gold);
+}
+
+.admin-btn:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+.admin-btn-quiet {
+  background: transparent;
+  color: var(--color-ink);
+  border-color: var(--color-line);
+}
+
+.admin-btn-danger {
+  background: transparent;
+  color: var(--color-danger);
+  border-color: color-mix(in srgb, var(--color-danger) 35%, transparent);
+}
+
+.admin-btn-danger:hover:not(:disabled) {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+  color: #fff;
+}
+
+.admin-upload-btn {
+  display: inline-flex;
+  padding: 0.6rem 1rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  border: 1px dashed var(--color-line);
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.admin-upload-btn:hover {
+  border-color: var(--color-gold);
+}
+
+.admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.admin-error-text {
+  font-size: 0.8125rem;
+  color: var(--color-danger);
+}
+
+.admin-ok-text {
+  font-size: 0.8125rem;
+  color: #3f7d4e;
+}
+
+.status-pill {
+  display: inline-flex;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+}
+
+.admin-link {
+  display: block;
+  padding: 0.6rem 0;
+  font-size: 0.8125rem;
+  color: color-mix(in srgb, var(--color-sand) 70%, transparent);
+  transition: color 0.2s ease;
+}
+
+.admin-link:hover,
+.admin-link[data-active="true"] {
+  color: var(--color-gold);
+}
+
+@media (min-width: 1024px) {
+  .admin-shell {
+    grid-template-columns: 260px 1fr;
+  }
+
+  .admin-main {
+    padding: 2.5rem 3rem;
+  }
+}
