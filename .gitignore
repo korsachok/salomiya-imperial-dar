@@ -5,3 +5,4 @@ out
 _source
 *.tsbuildinfo
 .vercel
+backups/

@@ -1,0 +1,37 @@
+name: Backup content
+
+# Ежедневный снимок контента Supabase в приватный артефакт GitHub Actions.
+# Бесплатно: артефакты приватного репозитория доступны только владельцу репозитория.
+# Хранится 90 дней; при исчерпании квоты GitHub удаляет самые старые.
+# Требует секрет NEXT_PUBLIC_SUPABASE_ANON_KEY (или SUPABASE_ANON_KEY).
+# Это публичный ключ, он и так в браузере сайта — ничего секретного.
+on:
+  schedule:
+    - cron: "17 3 * * *" # каждый день в 03:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Dump content
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://efxqqgxapikmwpfnnmmn.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: node scripts/backup-supabase.mjs --out backups
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: content-backup-${{ github.run_id }}
+          path: backups/
+          retention-days: 90

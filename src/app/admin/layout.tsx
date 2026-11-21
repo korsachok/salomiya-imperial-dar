@@ -4,6 +4,7 @@ import "./admin.css";
 import { getSiteContent } from "@/lib/content";
 import { t } from "@/lib/i18n";
 import { AdminNav } from "@/components/admin/AdminNav";
+import { SessionGuard } from "@/components/admin/SessionGuard";
 
 export const metadata: Metadata = {
   title: "Админ-панель — Salomiya Imperial Dar",
@@ -15,6 +16,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="admin-shell">
+      <SessionGuard />
       <AdminNav brand={brand} />
       <div className="admin-main">{children}</div>
     </div>

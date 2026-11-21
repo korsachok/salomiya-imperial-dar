@@ -5,6 +5,10 @@ import { deleteDog } from "@/app/admin/actions";
 import { DogForm } from "@/components/admin/DogForm";
 import { saveDog } from "@/app/admin/actions";
 
+// Админка всегда читает свежие данные: статический пререндер покажет устаревший контент.
+export const dynamic = "force-dynamic";
+
+
 export default async function AdminDogsPage() {
   const dogs = await getAllDogs();
 

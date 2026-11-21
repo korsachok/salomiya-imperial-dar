@@ -5,6 +5,7 @@ import { t } from "@/lib/i18n";
 import { NAV } from "@/lib/nav";
 import { SiteHeader } from "./SiteHeader";
 import { SiteFooter } from "./SiteFooter";
+import { OrganizationJsonLd } from "@/components/JsonLd";
 
 export const metadata: Metadata = {
   title: "Salomiya Imperial Dar — питомник померанских шпицев",
@@ -19,9 +20,17 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
   const email = t(content.get("contacts.email"));
   const social = t(content.get("contacts.social"));
   const footerNote = t(content.get("footer.note"));
+  const address = t(content.get("contacts.address"));
 
   return (
     <>
+      <OrganizationJsonLd
+        brand={brand}
+        description={footerNote || tagline}
+        phone={phone}
+        email={email}
+        address={address}
+      />
       <SiteHeader brand={brand} tagline={tagline} links={NAV} />
       {children}
       <SiteFooter brand={brand} tagline={footerNote || tagline} phone={phone} email={email} social={social} />

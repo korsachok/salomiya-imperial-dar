@@ -2,8 +2,11 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { createAuthServerClient } from "@/lib/supabase/auth-server";
 import { getAllContentWith } from "@/lib/content";
+import { slugify } from "@/lib/page-data";
+import { checkRateLimit, clientKey, resetRateLimit } from "@/lib/rate-limit";
 import { t } from "@/lib/i18n";
 import type { LocalizedText, PuppyStatus } from "@/types/db";
 
@@ -14,6 +17,20 @@ async function requireUser() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/admin/login");
+
+  // Защита в глубину: RLS — главный рубеж, но и серверный экшен не должен
+  // полагаться только на неё. Список владельцев читает SECURITY DEFINER
+  // функция public.is_admin() из миграции 0009.
+  //  - функции нет (0009 не применена) → PGRST202: не блокируем, чтобы не
+  //    сломать рабочую админку до миграции;
+  //  - функция есть → пускаем только при is_admin() === true.
+  const { data: isAdmin, error } = await supabase.rpc("is_admin");
+  const fnMissing = error?.code === "PGRST202" || /could not find the function/i.test(error?.message ?? "");
+  if (!fnMissing && isAdmin !== true) {
+    await supabase.auth.signOut();
+    redirect("/admin/login");
+  }
+
   return { user, supabase };
 }
 
@@ -31,12 +48,10 @@ function nullable(form: FormData, name: string): string | null {
   return value === "" ? null : value;
 }
 
-function slugify(value: string): string {
-  return value
-    .toLowerCase()
-    .replace(/[^a-z0-9а-яё]+/gi, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 60);
+function uniqueSlug(form: FormData, source: string): string {
+  const manual = str(form, "slug");
+  if (manual) return manual;
+  return `${slugify(source)}-${Math.random().toString(36).slice(2, 6)}`;
 }
 
 export async function signIn(_prev: ActionState, form: FormData): Promise<ActionState> {
@@ -44,10 +59,18 @@ export async function signIn(_prev: ActionState, form: FormData): Promise<Action
   const password = str(form, "password");
   if (!email || !password) return { error: "Введите email и пароль" };
 
+  const requestHeaders = await headers();
+  const key = clientKey(requestHeaders, email);
+  const limit = checkRateLimit(key);
+  if (!limit.ok) {
+    return { error: `Слишком много попыток. Повторите через ${limit.retryAfterMin} мин.` };
+  }
+
   const supabase = await createAuthServerClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return { error: "Неверный email или пароль" };
 
+  resetRateLimit(key);
   redirect("/admin");
 }
 
@@ -216,7 +239,7 @@ export async function saveDog(_prev: ActionState, form: FormData): Promise<Actio
   const photos = parsePhotos(form);
   const payload = {
     name,
-    slug: str(form, "slug") || slugify(name) + "-" + Math.random().toString(36).slice(2, 6),
+    slug: uniqueSlug(form, name),
     sex: nullable(form, "sex"),
     birth_date: nullable(form, "birth_date"),
     color: nullable(form, "color"),
@@ -241,10 +264,12 @@ export async function saveDog(_prev: ActionState, form: FormData): Promise<Actio
   return { ok: true };
 }
 
+// Удаление — только скрытие. Данные остаются в базе и восстанавливаются
+// переключением is_active, потому что бесплатные бэкапы у Supabase ограничены.
 export async function deleteDog(form: FormData) {
   await requireUser();
   const id = str(form, "id");
-  await (await authClient()).from("dogs").delete().eq("id", id);
+  await (await authClient()).from("dogs").update({ is_active: false }).eq("id", id);
   revalidatePath("/", "layout");
 }
 
@@ -264,7 +289,7 @@ export async function savePuppy(_prev: ActionState, form: FormData): Promise<Act
 
   const payload = {
     name,
-    slug: str(form, "slug") || slugify(name) + "-" + Math.random().toString(36).slice(2, 6),
+    slug: uniqueSlug(form, name),
     sex: nullable(form, "sex"),
     birth_date: nullable(form, "birth_date"),
     color: nullable(form, "color"),
@@ -301,7 +326,7 @@ export async function savePost(_prev: ActionState, form: FormData): Promise<Acti
 
   const payload = {
     title,
-    slug: str(form, "slug") || slugify(title) + "-" + Math.random().toString(36).slice(2, 6),
+    slug: uniqueSlug(form, title),
     excerpt: nullable(form, "excerpt"),
     body: nullable(form, "body"),
     cover_photo: nullable(form, "main_photo") || photos[0] || null,
@@ -326,13 +351,16 @@ export async function savePost(_prev: ActionState, form: FormData): Promise<Acti
 export async function deletePost(form: FormData) {
   await requireUser();
   const id = str(form, "id");
-  await (await authClient()).from("posts").delete().eq("id", id);
+  await (await authClient()).from("posts").update({ is_published: false }).eq("id", id);
   revalidatePath("/", "layout");
 }
 
 export async function deletePuppy(form: FormData) {
   await requireUser();
   const id = str(form, "id");
-  await (await authClient()).from("puppies").delete().eq("id", id);
+  await (await authClient())
+    .from("puppies")
+    .update({ is_active: false, status: "archived" })
+    .eq("id", id);
   revalidatePath("/", "layout");
 }

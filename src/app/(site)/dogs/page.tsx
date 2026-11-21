@@ -27,6 +27,7 @@ export default async function DogsPage() {
               const photo = dog.main_photo || dog.photos[0];
               return (
                 <li key={dog.id}>
+                  <Link href={`/dogs/${encodeURIComponent(dog.slug)}`} className="group block">
                   <article className="group">
                     <div className="relative aspect-[4/5] overflow-hidden bg-sand-deep">
                       {photo ? (
@@ -61,6 +62,7 @@ export default async function DogsPage() {
                       ) : null}
                     </dl>
                   </article>
+                  </Link>
                 </li>
               );
             })}

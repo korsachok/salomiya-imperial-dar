@@ -4,6 +4,10 @@ import { getAllPosts } from "@/lib/content";
 import { deletePost, savePost } from "@/app/admin/actions";
 import { PostForm } from "@/components/admin/PostForm";
 
+// Админка всегда читает свежие данные: статический пререндер покажет устаревший контент.
+export const dynamic = "force-dynamic";
+
+
 export default async function AdminPostsPage() {
   const posts = await getAllPosts();
 

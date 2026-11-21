@@ -2,6 +2,10 @@ import Link from "next/link";
 import { getAllDogs, getAllPuppies, getAllSiteContent, getAllPosts } from "@/lib/content";
 import { getUser } from "@/lib/supabase/auth-server";
 
+// Админка всегда читает свежие данные: статический пререндер покажет устаревший контент.
+export const dynamic = "force-dynamic";
+
+
 export default async function AdminDashboard() {
   const [user, dogs, puppies, content, posts] = await Promise.all([
     getUser(),

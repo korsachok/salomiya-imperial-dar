@@ -3,18 +3,37 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getPost } from "@/lib/content";
+import { decodeSlug } from "@/lib/page-data";
+import { BreadcrumbJsonLd } from "@/components/JsonLd";
 
 export const revalidate = 60;
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const post = await getPost(slug);
-  return { title: post ? `${post.title} — Salomiya Imperial Dar` : "Новость не найдена" };
+  const post = await getPost(decodeSlug(slug));
+  if (!post) return { title: "Новость не найдена", robots: { index: false, follow: true } };
+
+  const cover = post.cover_photo || post.photos[0];
+  const path = `/news/${encodeURIComponent(post.slug ?? "")}`;
+
+  return {
+    title: post.title,
+    description: post.excerpt ?? undefined,
+    alternates: { canonical: path },
+    openGraph: {
+      type: "article",
+      title: post.title,
+      description: post.excerpt ?? undefined,
+      url: path,
+      publishedTime: post.published_at,
+      images: cover ? [{ url: cover }] : undefined,
+    },
+  };
 }
 
 export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const post = await getPost(slug);
+  const post = await getPost(decodeSlug(slug));
   if (!post) notFound();
 
   const date = new Date(post.published_at).toLocaleDateString("ru-RU", {
@@ -25,6 +44,13 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-20 sm:px-8 lg:py-28">
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Главная", url: "/" },
+          { name: "Новости", url: "/news" },
+          { name: post.title, url: `/news/${encodeURIComponent(post.slug ?? "")}` },
+        ]}
+      />
       <Link
         href="/news"
         className="text-[0.625rem] tracking-[0.2em] uppercase text-ink-soft/60 transition-colors hover:text-gold"

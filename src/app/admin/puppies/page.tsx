@@ -4,6 +4,10 @@ import { getAllPuppies } from "@/lib/content";
 import { deletePuppy, savePuppy } from "@/app/admin/actions";
 import { PuppyForm } from "@/components/admin/PuppyForm";
 
+// Админка всегда читает свежие данные: статический пререндер покажет устаревший контент.
+export const dynamic = "force-dynamic";
+
+
 const STATUS_LABEL: Record<string, string> = {
   available: "Свободен",
   reserved: "В резерве",

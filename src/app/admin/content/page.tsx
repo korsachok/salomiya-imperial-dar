@@ -4,6 +4,10 @@ import { AdminForm } from "@/components/admin/AdminForm";
 import { ContentImageField } from "@/components/admin/ContentImageField";
 import { saveContent } from "@/app/admin/actions";
 
+// Админка всегда читает свежие данные: статический пререндер покажет устаревший контент.
+export const dynamic = "force-dynamic";
+
+
 const GROUP_TITLES: Record<string, string> = {
   general: "Общее",
   hero: "Главный экран",
